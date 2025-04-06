@@ -68,7 +68,12 @@ void ClientHandler::registerUser() {
     
     string username = recieveMessage();
 
-    //CHECK IF USRE NAME IS TAKEN then move on, else loop back
+    while(isUsernameUsed(username)){
+        string usernameErrorMsg = "Username: " + username + " already used.\nEnter a new Username:\n";
+        send(clientSocket, usernameErrorMsg.c_str(), usernameErrorMsg.size(), 0);
+    
+        username = recieveMessage();
+    }
     
     string passwordRequest = "Password:\n";
     send(clientSocket, passwordRequest.c_str(), passwordRequest.size(), 0);
@@ -79,4 +84,29 @@ void ClientHandler::registerUser() {
     send(clientSocket, successMessage.c_str(), successMessage.size(), 0);
    
     
+}
+
+bool ClientHandler::isUsernameUsed(std::string username){
+    ifstream fileIn("users.txt");
+
+    if(!fileIn.is_open()){
+        cerr << "Error: Unable to read DB file when verifying username availability.";
+        return false;
+    }
+
+    std::string normalizedUsername = username;
+    std::transform(normalizedUsername.begin(), normalizedUsername.end(), normalizedUsername.begin(), ::toupper);
+
+    std::string line;
+    int lineNumber = 1;
+    while (getline(fileIn, line)) {
+        if (line.find(normalizedUsername) != std::string::npos) {
+            std::cout << "Found '" << normalizedUsername << "' at line " << lineNumber << ": " << line << std::endl;
+            return true;
+        }
+        lineNumber++;
+    }
+
+    fileIn.close();
+    return false;
 }

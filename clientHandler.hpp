@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/select.h>
+#include <fstream>
+#include <algorithm>
 
 #define BUFFER_SIZE 1024
 
@@ -14,6 +16,7 @@ class ClientHandler {
     public:
     ClientHandler(int clientSocket);
     void run();
+
     private:
     char buffer[BUFFER_SIZE] = {0};
     std::string recieveMessage();
@@ -22,6 +25,7 @@ class ClientHandler {
     void welcome();
     void login();
     void registerUser();
+    bool isUsernameUsed(std::string);
 
     void sendOptions();
 
