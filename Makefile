@@ -28,7 +28,7 @@ client.o: client.cpp tcpClient.hpp
 .PHONY: clean run_server run_client
 
 clean:
-	rm -f server client tcpServer.o tcpClient.o client.o server.o
+	rm -f server client tcpServer.o tcpClient.o client.o server.o clientHandler.o
 
 # Start the server separately
 run_server: server
