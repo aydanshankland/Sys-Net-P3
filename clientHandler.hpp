@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/select.h>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
 
 #define BUFFER_SIZE 1024
@@ -26,6 +27,8 @@ class ClientHandler {
     void login();
     void registerUser();
     bool isUsernameUsed(std::string);
+    bool registerNewUserToFile(std::string username, std::string normalizedUsername, std::string password);
+    bool validateUser(std::string username, std::string password);
 
     void sendOptions();
 

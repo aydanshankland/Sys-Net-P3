@@ -58,7 +58,16 @@ void ClientHandler::login(){
     // NEED TO ADD LOGIC TO CHECK USERNAME AND PASSWORD
     // if login is correct, change isLoggedIn to true
     // if it is wrong display an message telling htem and let the run() funcntion hanlde the rest
-    
+    string loginMsg = "";
+    if(validateUser(username, password)){
+        isLoggedIn = true;
+        loginMsg = "You're logged in!";
+        send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
+    }else{
+        isLoggedIn = true;
+        loginMsg = "Login failed.";
+        send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
+    }
 
 }
 
@@ -83,7 +92,9 @@ void ClientHandler::registerUser() {
     string successMessage = "Succesfully registered\n";
     send(clientSocket, successMessage.c_str(), successMessage.size(), 0);
    
-    
+    std::string normalizedUsername = username;
+    std::transform(normalizedUsername.begin(), normalizedUsername.end(), normalizedUsername.begin(), ::toupper);
+    registerNewUserToFile(username, normalizedUsername, password);
 }
 
 bool ClientHandler::isUsernameUsed(std::string username){
@@ -98,13 +109,51 @@ bool ClientHandler::isUsernameUsed(std::string username){
     std::transform(normalizedUsername.begin(), normalizedUsername.end(), normalizedUsername.begin(), ::toupper);
 
     std::string line;
-    int lineNumber = 1;
     while (getline(fileIn, line)) {
         if (line.find(normalizedUsername) != std::string::npos) {
-            std::cout << "Found '" << normalizedUsername << "' at line " << lineNumber << ": " << line << std::endl;
+            // std::cout << "Found '" << normalizedUsername << "' at line " << lineNumber << ": " << line << std::endl;
             return true;
         }
-        lineNumber++;
+    }
+
+    fileIn.close();
+    return false;
+}
+
+bool ClientHandler::registerNewUserToFile(std::string username, std::string normalizedUsername, std::string password){
+    ofstream fileOut("users.txt", std::ios::app);
+
+    if(!fileOut.is_open()){
+        cerr << "Error: Unable to open DB file.";
+        return false;
+    }
+
+    fileOut << username << " " << normalizedUsername << " " << password << endl;
+    fileOut.close();
+    return true;
+}
+
+bool ClientHandler::validateUser(std::string username, std::string password){
+    ifstream fileIn("users.txt");
+
+    if(!fileIn.is_open()){
+        cerr << "Error: Unable to read DB file when verifying username and password.";
+        return false;
+    }
+
+    std::string normalizedUsername = username;
+    std::transform(normalizedUsername.begin(), normalizedUsername.end(), normalizedUsername.begin(), ::toupper);
+
+    std::string line;
+    while (getline(fileIn, line)) {
+        istringstream iss(line);
+        string fileUsername, fileUsernameUpper, filePassword;
+
+        if (iss >> fileUsername >> fileUsernameUpper >> filePassword) {
+            if (fileUsername == username && filePassword == password) {
+                return true;
+            }
+        }
     }
 
     fileIn.close();

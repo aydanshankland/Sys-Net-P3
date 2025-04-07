@@ -16,7 +16,6 @@ class User {
     private:
         int socketNo;
         // int portNum;
-        int userId;
         std::string username;
         std::string usernameNormalized;
         std::string password;
