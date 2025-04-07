@@ -81,21 +81,19 @@ void TCPClient::sendData(string input){
     }
 }
 
-void TCPClient::receiveData(){
+std::string TCPClient::receiveData(){
     char buffer[BUFFER_SIZE] = {0};
-    memset(buffer, 0, BUFFER_SIZE); // Clear the buffer before receiving
-
-    // Receive data from the client
     ssize_t bytesRecvd = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
     
     if (bytesRecvd <= 0) {
         std::cout << "Client disconnected." << std::endl;
-    } else {
-        printReceivedData(buffer, bytesRecvd);
+        return "EXIT";
     }
 
-    buffer[bytesRecvd] = '\0'; // Null-terminate received message
+    buffer[bytesRecvd] = '\0';
+    return std::string(buffer);
 }
+
 
 void TCPClient::printReceivedData(const char* buffer, ssize_t bytesRecvd){ 
     std::cout << buffer << std::endl;

@@ -31,7 +31,7 @@ class TCPClient{
 
     void sendData(string input);
 
-    void receiveData();
+    string receiveData();
 
     void printReceivedData(const char* buffer, ssize_t bytesRecvd);
 
