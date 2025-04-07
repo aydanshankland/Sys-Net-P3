@@ -9,7 +9,7 @@ ClientHandler::ClientHandler(int clientSocket){
 void ClientHandler::run() {
     while (true) {
         // Unauthenticated menu
-        do {
+        while (!isLoggedIn){
             this->welcomeAnonymous();
             std::string clientMsg = recieveMessage();
 
@@ -17,11 +17,13 @@ void ClientHandler::run() {
                 this->login();
             } else if (clientMsg == "2") {
                 this->registerUser();
+            } else if (clientMsg == "exit") {
+                return;    // end server session
             } else {
                 std::string errorMessage = "Invalid input\n";
                 send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
             }
-        } while (!isLoggedIn);
+        } 
 
         // Authenticated menu
         while (isLoggedIn) {
@@ -112,7 +114,6 @@ void ClientHandler::login(){
         loginMsg = "Login failed.\n";
         send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
     }
-
 }
 
 void ClientHandler::registerUser() {
@@ -243,20 +244,32 @@ void ClientHandler::subscribeToLocation(){
     std::string prompt = "Enter location to subscribe:\n";
     send(clientSocket, prompt.c_str(), prompt.size(), 0);
     std::string location = recieveMessage();
-    currentUser->subscribeTo(location);
 
-    std::string msg = "\nSubscribed to " + location + "\n";
-    send(clientSocket, msg.c_str(), msg.size(), 0);
+    if (currentUser->isSubscribed(location)) {
+        std::string msg = "\nYou are already subscribed to " + location + ".\n\n";
+        send(clientSocket, msg.c_str(), msg.size(), 0);
+    } else {
+        currentUser->subscribeTo(location);
+        std::string msg = "\nSubscribed to " + location + ".\n\n";
+        send(clientSocket, msg.c_str(), msg.size(), 0);
+    }
 }
+
 void ClientHandler::unsubscribeFromLocation(){
     std::string prompt = "Enter location to unsubscribe:\n";
     send(clientSocket, prompt.c_str(), prompt.size(), 0);
     std::string location = recieveMessage();
-    currentUser->unsubscribeFrom(location);
 
-    std::string msg = "\nUnsubscribed from " + location + "\n";
-    send(clientSocket, msg.c_str(), msg.size(), 0);
+    if (!currentUser->isSubscribed(location)) {
+        std::string msg = "\nYou are not subscribed to " + location + ".\n\n";
+        send(clientSocket, msg.c_str(), msg.size(), 0);
+    } else {
+        currentUser->unsubscribeFrom(location);
+        std::string msg = "\nUnsubscribed from " + location + ".\n\n";
+        send(clientSocket, msg.c_str(), msg.size(), 0);
+    }
 }
+
 void ClientHandler::viewSubscriptions(){
     std::string result = currentUser->listSubscribedLocations();
     send(clientSocket, result.c_str(), result.size(), 0);
@@ -267,6 +280,6 @@ void ClientHandler::logout(){
     delete currentUser;
     currentUser = nullptr;
 
-    string logoutMsg = "\nYou've logged out.\n";
+    string logoutMsg = "\nYou've logged out.\n\n";
     send(clientSocket, logoutMsg.c_str(), logoutMsg.size(), 0);
 }

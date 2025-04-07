@@ -21,14 +21,31 @@ int main() {
 
     TCPClient client(PORTNUM, serverAddress);
 
-    string input;
+    std::string input, response;
 
-    bool connected = client.receiveData();
+    // Initial server welcome message
+    while (true) {
+        response = client.receiveData();
+        if (response == "EXIT") break;
 
-    while (connected) {
-        std::getline(std::cin >> std::ws, input);  // flush leading newline
-        client.sendData(input);
-        connected = client.receiveData();
+        std::cout << response;
+
+        // Only wait for user input if server prompt expects it
+        if (response.find("Username:") != std::string::npos ||
+            response.find("Password:") != std::string::npos ||
+            response.find("Enter") != std::string::npos ||
+            response.find("Press") != std::string::npos ||
+            response.find("Type") != std::string::npos ||
+            response.find("Invalid input") != std::string::npos ||
+            response.find("Subscribed") != std::string::npos ||
+            response.find("not subscribed") != std::string::npos ||
+            response.find("Successfully") != std::string::npos ||
+            response.find("logged out") != std::string::npos ||
+            response.find("locations:") != std::string::npos
+        ) {
+            std::getline(std::cin >> std::ws, input);
+            client.sendData(input);
+        }
     }
 
     std::cout << "[Client] Exiting.\n";
