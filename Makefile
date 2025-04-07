@@ -4,8 +4,8 @@ CC = g++
 
 all: server client
 
-server: server.o clientHandler.o tcpServer.o
-	$(CC) $(CFLAGS) -o server server.o clientHandler.o tcpServer.o $(LDFLAGS)
+server: server.o clientHandler.o tcpServer.o user.o
+	$(CC) $(CFLAGS) -o server server.o clientHandler.o tcpServer.o user.o $(LDFLAGS)
 
 client: client.o tcpClient.o
 	$(CC) $(CFLAGS) -o client client.o tcpClient.o $(LDFLAGS)
@@ -16,7 +16,7 @@ clientHandler.o: clientHandler.cpp clientHandler.hpp
 tcpServer.o: tcpServer.cpp tcpServer.hpp
 	$(CC) $(CFLAGS) -c tcpServer.cpp
 
-server.o: server.cpp clientHandler.hpp tcpServer.hpp
+server.o: server.cpp clientHandler.hpp tcpServer.hpp user.hpp
 	$(CC) $(CFLAGS) -c server.cpp
 
 tcpClient.o: tcpClient.cpp tcpClient.hpp
@@ -28,7 +28,7 @@ client.o: client.cpp tcpClient.hpp
 .PHONY: clean run_server run_client
 
 clean:
-	rm -f server client tcpServer.o tcpClient.o client.o server.o clientHandler.o
+	rm -f server client tcpServer.o tcpClient.o client.o server.o clientHandler.o user.o
 
 # Start the server separately
 run_server: server

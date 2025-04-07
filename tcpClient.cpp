@@ -81,7 +81,7 @@ void TCPClient::sendData(string input){
     }
 }
 
-void TCPClient::receiveData(){
+bool TCPClient::receiveData(){
     char buffer[BUFFER_SIZE] = {0};
     memset(buffer, 0, BUFFER_SIZE); // Clear the buffer before receiving
 
@@ -90,11 +90,12 @@ void TCPClient::receiveData(){
     
     if (bytesRecvd <= 0) {
         std::cout << "Client disconnected." << std::endl;
+        return false;
     } else {
+        buffer[bytesRecvd] = '\0'; // Null-terminate received message
         printReceivedData(buffer, bytesRecvd);
+        return true;
     }
-
-    buffer[bytesRecvd] = '\0'; // Null-terminate received message
 }
 
 void TCPClient::printReceivedData(const char* buffer, ssize_t bytesRecvd){ 

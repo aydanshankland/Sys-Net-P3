@@ -26,10 +26,3 @@ std::string User::listSubscribedLocations() const {
         result += "- " + loc + "\n";
     return result;
 }
-
-// Messaging
-void User::addToInbox(const std::string& msg) {
-    if (inbox.size() >= 10)
-        inbox.pop_front();
-    inbox.push_back(msg);
-}

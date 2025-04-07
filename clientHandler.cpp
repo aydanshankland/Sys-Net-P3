@@ -7,43 +7,48 @@ ClientHandler::ClientHandler(int clientSocket){
 }
 
 void ClientHandler::run() {
-    do{
-        this->welcome();
-        string clientMsg = recieveMessage();
+    while (true) {
+        // Unauthenticated menu
+        do {
+            this->welcomeAnonymous();
+            std::string clientMsg = recieveMessage();
 
-        if(clientMsg == "1") {
-            this->login();
-        } else if( clientMsg == "2") {
-            this->registerUser();
-        } else {
-            string errorMessage = "Invalid input\n";
-            send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
-        }
-    }while(!isLoggedIn);
+            if (clientMsg == "1") {
+                this->login();
+            } else if (clientMsg == "2") {
+                this->registerUser();
+            } else {
+                std::string errorMessage = "Invalid input\n";
+                send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
+            }
+        } while (!isLoggedIn);
 
-    while(isLoggedIn){
-        string menu = "1 Subscribe to a location\n2 Unsubscribe from a location\n3 Send a message to a location\n4 Send a private message\n5 See all the locations you are subscribed to\n6 See all the online users\n7 See last 10 messages\n8 change password\nType 'exit' to Quit\n";
-        send(clientSocket, menu.c_str(), menu.size(), 0);
-        string clientMsg = recieveMessage();
+        // Authenticated menu
+        while (isLoggedIn) {
+            this->welcomeAuthUser();                     
+            std::string clientMsg = recieveMessage();
 
-        if(clientMsg == "1") {
-            // this->login();
-        } else if( clientMsg == "2") {
-            // this->registerUser();
-        } else if( clientMsg == "3") {
-            // this->registerUser();
-        } else if( clientMsg == "4") {
-        } else if( clientMsg == "5") {
-        } else if( clientMsg == "6") {
-        } else if( clientMsg == "7") {
-        } else if( clientMsg == "8") {
-        } else {
-            string errorMessage = "Invalid input\n";
-            send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
+            if (clientMsg == "1") {
+                subscribeToLocation();
+            } else if (clientMsg == "2") {
+                unsubscribeFromLocation();
+            } else if (clientMsg == "3") {
+                viewSubscriptions();
+            } else if (clientMsg == "4") {
+                changePassword();
+            } else if (clientMsg == "5") {
+                logout();  // return to unauthenticated
+            } else if (clientMsg == "exit") {
+                logout();  // cleanup
+                return;    // end server session
+            } else {
+                std::string errorMessage = "Invalid input\n";
+                send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
+            }
         }
     }
-    
 }
+
 
 string ClientHandler::recieveMessage() {
     memset(buffer, 0, BUFFER_SIZE);
@@ -53,17 +58,33 @@ string ClientHandler::recieveMessage() {
 
     if (bytesRecvd <= 0) {
         std::cout << "Client disconnected." << std::endl;
+        return "";
     }
 
     buffer[bytesRecvd] = '\0';
     string clientMsg(buffer);
 
+    // Remove leading/trailing whitespace
+    clientMsg.erase(0, clientMsg.find_first_not_of(" \n\r\t"));
+    clientMsg.erase(clientMsg.find_last_not_of(" \n\r\t") + 1);
+
     return clientMsg;
 }
 
-void ClientHandler::welcome(){
+void ClientHandler::welcomeAnonymous(){
     string welcomeMessage = "Welcome\nPress 1 to login\nPress 2 to register\n";
     send(clientSocket, welcomeMessage.c_str(), welcomeMessage.size(), 0);
+}
+
+void ClientHandler::welcomeAuthUser(){
+    string menu =
+                "1 Subscribe to a location\n"
+                "2 Unsubscribe from a location\n"
+                "3 See all the locations you are subscribed to\n"
+                "4 change password\n"
+                "5 Logout\n"
+                "Type 'exit' to Quit client session\n";
+    send(clientSocket, menu.c_str(), menu.size(), 0);
 }
 
 void ClientHandler::login(){
@@ -87,7 +108,7 @@ void ClientHandler::login(){
         loginMsg = "You're logged in!\n";
         send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
     }else{
-        isLoggedIn = true;
+        isLoggedIn = false;
         loginMsg = "Login failed.\n";
         send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
     }
@@ -112,12 +133,14 @@ void ClientHandler::registerUser() {
     
     string password = recieveMessage();
 
-    string successMessage = "Succesfully registered\n";
-    send(clientSocket, successMessage.c_str(), successMessage.size(), 0);
-   
     std::string normalizedUsername = username;
     std::transform(normalizedUsername.begin(), normalizedUsername.end(), normalizedUsername.begin(), ::toupper);
     registerNewUserToFile(username, normalizedUsername, password);
+
+    string successMessage = "Successfully registered.\nReturning to main menu...\n\n";
+    send(clientSocket, successMessage.c_str(), successMessage.size(), 0);
+    
+    return;
 }
 
 bool ClientHandler::isUsernameUsed(std::string username){
@@ -181,4 +204,69 @@ bool ClientHandler::validateUser(std::string username, std::string password){
 
     fileIn.close();
     return false;
+}
+
+void ClientHandler::changePassword(){
+    std::string prompt = "Enter new password:\n";
+    send(clientSocket, prompt.c_str(), prompt.size(), 0);
+    std::string newPass = recieveMessage();
+
+    currentUser->setPassword(newPass);
+
+    // Update users.txt
+    std::ifstream inFile("users.txt");
+    std::ofstream outFile("users_tmp.txt");
+    std::string line;
+
+    while (getline(inFile, line)) {
+        std::istringstream iss(line);
+        std::string uname, unameUpper, pwd;
+        if (iss >> uname >> unameUpper >> pwd) {
+            if (uname == currentUser->getUsername()) {
+                outFile << uname << " " << unameUpper << " " << newPass << "\n";
+            } else {
+                outFile << line << "\n";
+            }
+        }
+    }
+
+    inFile.close();
+    outFile.close();
+    remove("users.txt");
+    rename("users_tmp.txt", "users.txt");
+
+    std::string msg = "\nPassword changed successfully.\n";
+    send(clientSocket, msg.c_str(), msg.size(), 0);
+}
+
+void ClientHandler::subscribeToLocation(){
+    std::string prompt = "Enter location to subscribe:\n";
+    send(clientSocket, prompt.c_str(), prompt.size(), 0);
+    std::string location = recieveMessage();
+    currentUser->subscribeTo(location);
+
+    std::string msg = "\nSubscribed to " + location + "\n";
+    send(clientSocket, msg.c_str(), msg.size(), 0);
+}
+void ClientHandler::unsubscribeFromLocation(){
+    std::string prompt = "Enter location to unsubscribe:\n";
+    send(clientSocket, prompt.c_str(), prompt.size(), 0);
+    std::string location = recieveMessage();
+    currentUser->unsubscribeFrom(location);
+
+    std::string msg = "\nUnsubscribed from " + location + "\n";
+    send(clientSocket, msg.c_str(), msg.size(), 0);
+}
+void ClientHandler::viewSubscriptions(){
+    std::string result = currentUser->listSubscribedLocations();
+    send(clientSocket, result.c_str(), result.size(), 0);
+}
+
+void ClientHandler::logout(){
+    isLoggedIn = false;
+    delete currentUser;
+    currentUser = nullptr;
+
+    string logoutMsg = "\nYou've logged out.\n";
+    send(clientSocket, logoutMsg.c_str(), logoutMsg.size(), 0);
 }

@@ -19,7 +19,6 @@ class User {
         std::string uppercaseUsername;
         std::string password;
         std::deque<std::string> subscribedLocations;
-        std::deque<std::string> inbox;
 
     public:
         User(int socket, const std::string& uname, const std::string& pwd) : clientSocket(socket), username(uname), password(pwd) {
@@ -33,7 +32,6 @@ class User {
         std::string getUppercaseUsername() const { return uppercaseUsername; }
         std::string getPassword() const { return password; }
         std::deque<std::string> getSubscribedLocations() const { return subscribedLocations; }
-        const std::deque<std::string>& getInbox() const { return inbox; }
         void setClientSocket(int socket) { clientSocket = socket; }
         void setPassword(const std::string& newPassword) { password = newPassword; }
 
@@ -43,9 +41,6 @@ class User {
         bool isSubscribed(const std::string&) const ;
         string listSubscribedLocations() const;
 
-        // Messaging
-        void addToInbox(const std::string&);
-        void clearInbox(){ inbox.clear(); }
 };
 
 

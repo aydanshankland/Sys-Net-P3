@@ -1,6 +1,7 @@
 #ifndef CLIENTHANDLER_HPP
 #define CLIENTHANDLER_HPP
 
+#include "user.hpp"
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,7 +11,6 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include "user.hpp"
 
 #define BUFFER_SIZE 1024
 
@@ -25,12 +25,18 @@ class ClientHandler {
     std::string recieveMessage();
     int clientSocket;
     bool isLoggedIn = false;
-    void welcome();
+    void welcomeAnonymous();
+    void welcomeAuthUser();
     void login();
     void registerUser();
     bool isUsernameUsed(std::string);
     bool registerNewUserToFile(std::string username, std::string normalizedUsername, std::string password);
     bool validateUser(std::string username, std::string password);
+    void changePassword();
+    void subscribeToLocation();
+    void unsubscribeFromLocation();
+    void viewSubscriptions();
+    void logout();
 
     void sendOptions();
 

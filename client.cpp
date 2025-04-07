@@ -23,16 +23,15 @@ int main() {
 
     string input;
 
-    client.receiveData();
+    bool connected = client.receiveData();
 
-    do{
-        cin >> input;
-
+    while (connected) {
+        std::getline(std::cin >> std::ws, input);  // flush leading newline
         client.sendData(input);
+        connected = client.receiveData();
+    }
 
-        client.receiveData();
-
-    }while(input != "exit");
+    std::cout << "[Client] Exiting.\n";
 
 
     return 0;
