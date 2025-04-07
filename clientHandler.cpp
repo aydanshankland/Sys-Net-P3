@@ -20,6 +20,28 @@ void ClientHandler::run() {
             send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
         }
     }while(!isLoggedIn);
+
+    while(isLoggedIn){
+        string menu = "1 Subscribe to a location\n2 Unsubscribe from a location\n3 Send a message to a location\n4 Send a private message\n5 See all the locations you are subscribed to\n6 See all the online users\n7 See last 10 messages\n8 change password\nType 'exit' to Quit\n";
+        send(clientSocket, menu.c_str(), menu.size(), 0);
+        string clientMsg = recieveMessage();
+
+        if(clientMsg == "1") {
+            // this->login();
+        } else if( clientMsg == "2") {
+            // this->registerUser();
+        } else if( clientMsg == "3") {
+            // this->registerUser();
+        } else if( clientMsg == "4") {
+        } else if( clientMsg == "5") {
+        } else if( clientMsg == "6") {
+        } else if( clientMsg == "7") {
+        } else if( clientMsg == "8") {
+        } else {
+            string errorMessage = "Invalid input\n";
+            send(clientSocket, errorMessage.c_str(), errorMessage.size(), 0);
+        }
+    }
     
 }
 
@@ -61,11 +83,12 @@ void ClientHandler::login(){
     string loginMsg = "";
     if(validateUser(username, password)){
         isLoggedIn = true;
-        loginMsg = "You're logged in!";
+        currentUser = new User(clientSocket, username, password); // update user object
+        loginMsg = "You're logged in!\n";
         send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
     }else{
         isLoggedIn = true;
-        loginMsg = "Login failed.";
+        loginMsg = "Login failed.\n";
         send(clientSocket, loginMsg.c_str(), loginMsg.size(), 0);
     }
 

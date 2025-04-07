@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include "user.hpp"
 
 #define BUFFER_SIZE 1024
 
@@ -20,6 +21,7 @@ class ClientHandler {
 
     private:
     char buffer[BUFFER_SIZE] = {0};
+    User* currentUser = nullptr;
     std::string recieveMessage();
     int clientSocket;
     bool isLoggedIn = false;
