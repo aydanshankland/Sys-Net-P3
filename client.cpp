@@ -47,6 +47,9 @@ int main() {
 
         std::getline(std::cin >> std::ws, input);
         client.sendData(input);
+        if(input == "exit"){
+            break;
+        }
     }
 
     return 0;
