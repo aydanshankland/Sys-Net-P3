@@ -5,7 +5,6 @@ TCPServer::TCPServer(int portNum) { // Initialize atomic variable in the constru
     this->serverClosed=false;
     servSocket = -1;
     startServer();
-    t = std::thread(&TCPServer::exitServer, this); // Start exit listener in a separate thread
     run();
 }
 
@@ -125,6 +124,8 @@ void TCPServer::handleClient(int clientSocket){
     ClientHandler clientHandler(clientSocket);
 
         clientHandler.run();
+
+        
 
     close(clientSocket);
     std::cout << "Client connection closed." << std::endl;

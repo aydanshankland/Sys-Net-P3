@@ -2,3 +2,5 @@ jbravo JBRAVO 123
 k K 1
 jj JJ 1
 h H 2
+aydan AYDAN pass
+james JAMES bond
